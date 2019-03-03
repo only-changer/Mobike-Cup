@@ -2,7 +2,7 @@ from __future__ import division
 import pandas as pd
 import tensorflow as tf
 import numpy as np
-from keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, Activation, Conv2D
+from keras.layers import Multiply, Input, Dense, Flatten, Dropout, BatchNormalization, Activation, Conv2D
 from keras.optimizers import Adam
 from sklearn.decomposition import FactorAnalysis, PCA
 from sklearn.model_selection import train_test_split
@@ -12,12 +12,14 @@ from sklearn.model_selection import ParameterGrid
 from const import ModelChoice, CITY_BLOCK_DICT, FeatureChoice, ReducerChoice, PATH_PATTERN, TARGET, FEATURE_DICT
 from const import LOG_DIR, ScaleChoice
 import pywt
+import os
 from sklearn.metrics import mean_squared_error
 import pandas
 from attention_utils import get_activations, get_data
 from keras.models import *
 from keras.layers import Input, Dense, merge
 from keras.utils.np_utils import to_categorical
+
 
 def entropy_evaluation(model_name, y_test, y_predict, label='Test', baseline_flag=False):
     y_predict = y_predict.flatten()
@@ -70,13 +72,13 @@ def run_layer(neighbor=5):
     bestn = 0
     my_ans = []
     for e in range(99):
-        # my_ans.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        my_ans.append([0])
+        my_ans.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        # my_ans.append([0])
     my_ans = np.array(my_ans)
     my_train = []
     for e in range(891):
-        # my_train.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        my_train.append([0])
+        my_train.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        # my_train.append([0])
     my_train = np.array(my_train)
     for gogogo in range(1):
         each_max = 10
@@ -148,8 +150,11 @@ def run_layer(neighbor=5):
                 # kk = cA[j]
                 # cA = cA / kk
                 # y_train.append(y1[i])
-                y_train.append(kk)
-            # y_train.append([cA[0],cA[1],cA[2],cA[3],cA[4],cA[5],cA[6],cA[7],cA[8],cA[9],cA[10],cA[11],cA[12],cA[13],cA[14],cA[15],cA[16],cA[17],cA[18],cA[19],cA[20],cA[21],cA[22],cA[23],cA[24],cA[25],cA[26],cA[27],cA[28]])
+                # y_train.append(kk)
+                y_train.append(
+                    [cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6], cA[7], cA[8], cA[9], cA[10], cA[11], cA[12],
+                     cA[13], cA[14], cA[15], cA[16], cA[17], cA[18], cA[19], cA[20], cA[21], cA[22], cA[23], cA[24],
+                     cA[25], cA[26], cA[27], cA[28]])
             for i in range(len(y2)):
                 cA, cD = pywt.dwt(y2[i], 'db6')
                 kk = 0
@@ -159,8 +164,11 @@ def run_layer(neighbor=5):
                 # kk = cA[j]
                 # cA = cA / kk
                 # y_test.append(y2[i])
-                y_test.append(kk)
-            # y_test.append([cA[0],cA[1],cA[2],cA[3],cA[4],cA[5],cA[6],cA[7],cA[8],cA[9],cA[10],cA[11],cA[12],cA[13],cA[14],cA[15],cA[16],cA[17],cA[18],cA[19],cA[20],cA[21],cA[22],cA[23],cA[24],cA[25],cA[26],cA[27],cA[28]])
+                # y_test.append(kk)
+                y_test.append(
+                    [cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6], cA[7], cA[8], cA[9], cA[10], cA[11], cA[12],
+                     cA[13], cA[14], cA[15], cA[16], cA[17], cA[18], cA[19], cA[20], cA[21], cA[22], cA[23], cA[24],
+                     cA[25], cA[26], cA[27], cA[28]])
 
             from keras.layers import Conv2D, MaxPool2D, Dense, Flatten, MaxPooling2D
             from keras.models import Sequential
@@ -194,7 +202,7 @@ def run_layer(neighbor=5):
             model.add(Flatten())
             model.add(Dense(32, activation='relu'))
             model.add(Dropout(0.2))
-            model.add(Dense(1))
+            model.add(Dense(29))
             optimizer = Adam(lr=0.001)
             model.compile(optimizer=optimizer, loss='mse')
             minn = 10000
@@ -228,23 +236,24 @@ def run_layer(neighbor=5):
             print(np.shape(my_ans_go))
 
             # z = np.vstack(y_test)
-            sum_i, kl_i, rmlse_i = entropy_evaluation("CNN", y_test, my_ans_go)
+            # sum_i, kl_i, rmlse_i = entropy_evaluation("CNN", y_test, my_ans_go)
             # output = pandas.DataFrame(list(z))
             # output.to_csv(str(gogogo) + "focus" + str(qaq) +  " my_pred" + str(kl_i) + ".csv", index=False)
-            for e in range(len(y_test)):
-                my_ans[e][gogogo] = my_ans_go[e]
+
+            # for e in range(len(y_test)):
+            #   my_ans[e][gogogo] = my_ans_go[e]
             train = model.predict(x_train)
-            for e in range(len(y_train)):
-                my_train[e][gogogo] = train[e]
-    return my_train, my_ans, y_train, y_test
+            # for e in range(len(y_train)):
+            #    my_train[e][gogogo] = train[e]
+    return train, ans, y_train, y_test
 
 
 def build_model(input_dim):
     inputs = Input(shape=(input_dim,))
 
-    attention_probs = Dense(input_dim, activation='relu', name='attention_vec')(inputs)
-    attention_mul = merge([inputs, attention_probs], output_shape=32, name='attention_mul', mode='mul')
-
+    attention_probs = Dense(input_dim, activation='softmax', name='attention_vec')(inputs)
+    # attention_mul = merge([inputs, attention_probs], output_shape=32, name='attention_mul', mode='mul')
+    attention_mul = Multiply(name='attention_mul')([inputs, attention_probs])
     attention_mul = Dense(16)(attention_mul)
     output = Dense(8, activation='softmax')(attention_mul)
     model = Model(input=[inputs], output=output)
@@ -252,21 +261,25 @@ def build_model(input_dim):
 
 
 if __name__ == '__main__':
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    max_neighbor = 3
     layers = []
     result = []
     real_train = []
     real_test = []
-    for i in range(8):
+    for i in range(max_neighbor):
         train, test, real_train, real_test = run_layer(i + 1)
         layers.append(train)
         result.append(test)
-    r_layers = np.reshape(np.array(layers), (8, len(real_train)))
-    m, n = np.shape(r_layers)
-    r_result = np.reshape(np.array(result), (8, len(real_test)))
-    real_train = np.reshape(np.array(real_train), (len(real_train), 1))
+    r_layers = np.reshape(np.array(layers), (max_neighbor, len(real_train), 29))
+    m, n, _ = np.shape(r_layers)
+    r_result = np.reshape(np.array(result), (max_neighbor, len(real_test), 29))
+    real_train = np.reshape(np.array(real_train), (len(real_train), 29))
     real_test = np.array(real_test)
-    layers = np.zeros((len(real_train), 8))
-    result = np.zeros((len(real_test), 8))
+    layers = np.zeros((len(real_train), max_neighbor))
+    result = np.zeros((len(real_test), max_neighbor))
+    origin_real = np.reshape(np.array(real_train), (-1, 29))
     for i in range(n):
         for j in range(m):
             layers[i][j] = r_layers[j][i]
@@ -281,14 +294,14 @@ if __name__ == '__main__':
                 best_fit = abs(real_train[i] - layers[i][j])
                 best_fit_num = j
         real_train[i] = best_fit_num
-    real_train = to_categorical(real_train, num_classes=8)
+    real_train = to_categorical(real_train, num_classes=max_neighbor)
     m = build_model(m)
-    optimizer = Adam(lr=0.0001)
+    optimizer = Adam(lr=0.00001)
     m.compile(optimizer=optimizer, loss='categorical_crossentropy')
     print(m.summary())
-    m.fit([layers], real_train, epochs=200, batch_size=8, validation_split=0.1)
+    m.fit([layers], real_train, epochs=1000, batch_size=8, validation_split=0.1)
 
-    test = np.reshape(layers[0], (1, 8))
+    test = np.reshape(layers[0], (1, max_neighbor))
 
     attention_vector = get_activations(m, test,
                                        print_shape_only=True,
@@ -296,16 +309,21 @@ if __name__ == '__main__':
     print('attention =', attention_vector)
 
     # plot part.
-    import matplotlib.pyplot as plt
-    import pandas as pd
-
-    pd.DataFrame(attention_vector, columns=['attention (%)']).plot(kind='bar',
-                                                                   title='Attention Mechanism as '
-                                                                         'a function of input'
-                                                                         ' dimensions.')
-    plt.show()
-    ans = m.predict(layers)
-    print "hello world!"
+    # import matplotlib.pyplot as plt
+    # import pandas as pd
+    #
+    # pd.DataFrame(attention_vector, columns=['attention (%)']).plot(kind='bar',
+    #                                                                title='Attention Mechanism as '
+    #                                                                      'a function of input'
+    #                                                                      ' dimensions.')
+    # plt.show()
+    ans = m.predict(result)
+    final_ans = np.zeros(len(ans))
+    for i in range(len(result)):
+        final_ans[i] = np.sum(ans[i] * result[i])
+    print(final_ans)
+    print(real_test)
+    print("hello world!")
 
 # z = np.vstack(y_test)
 
